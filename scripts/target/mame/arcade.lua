@@ -886,6 +886,7 @@ function linkProjects_mame_arcade(_target, _subtarget)
 		"funworld",
 		"fuuki",
 		"gaelco",
+		"gakken",
 		"gameplan",
 		"gametron",
 		"gottlieb",
@@ -2065,6 +2066,11 @@ files {
 	MAME_DIR .. "src/mame/machine/gaelco_ds5002fp.cpp",
 	MAME_DIR .. "src/mame/machine/gaelco_ds5002fp.h",
 	MAME_DIR .. "src/mame/drivers/bigkarnk_ms.cpp",
+}
+
+createMAMEProjects(_target, _subtarget, "gakken")
+files {
+	MAME_DIR .. "src/mame/drivers/gtvboy.cpp",
 }
 
 createMAMEProjects(_target, _subtarget, "gameplan")

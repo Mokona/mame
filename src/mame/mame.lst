@@ -15815,6 +15815,9 @@ victoryp                        //
 victorypf                       //
 victorypg                       //
 
+@source:gtvboy.cpp
+gtvboy                          //
+
 @source:guab.cpp
 crisscrs                        // (c) 1986
 guab                            // (c) 1986
