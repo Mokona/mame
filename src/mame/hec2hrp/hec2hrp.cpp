@@ -279,7 +279,7 @@ static INPUT_PORTS_START( hec2hrp )
 		PORT_BIT(0x80, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("Joy(1) DOWN")        PORT_CODE(KEYCODE_2_PAD)
 
 	PORT_START("KEY.8") /* [1] - port 3000 @ 8  not for the real machine, but to emulate the analog signal of the joystick */
-		PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYBOARD) PORT_NAME("RESET")             PORT_CODE(KEYCODE_ESC)      PORT_CHAR(27) // crashes the machine
+		PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYBOARD) PORT_NAME("RESET")             PORT_CODE(KEYCODE_ESC)      PORT_CHAR(27)
 		PORT_BIT(0x02, IP_ACTIVE_LOW,  IPT_KEYBOARD) PORT_NAME("Joy(0) FIRE")       PORT_CODE(KEYCODE_TILDE)
 		PORT_BIT(0x04, IP_ACTIVE_LOW,  IPT_KEYBOARD) PORT_NAME("Joy(1) FIRE")       PORT_CODE(KEYCODE_PLUS_PAD)
 		PORT_BIT(0x08, IP_ACTIVE_HIGH, IPT_KEYBOARD ) PORT_NAME("Pot(0)+") PORT_CODE(KEYCODE_INSERT)
@@ -299,7 +299,7 @@ INPUT_PORTS_END
 
 MACHINE_RESET_MEMBER(hec2hrp_state,interact)
 {
-	hector_reset(0, 0);
+	hector_reset(false, false);
 }
 
 MACHINE_START_MEMBER(hec2hrp_state,hec2hrp)
@@ -310,7 +310,7 @@ MACHINE_START_MEMBER(hec2hrp_state,hec2hrp)
 MACHINE_RESET_MEMBER(hec2hrp_state,hec2hrp)
 {
 	// Machines init
-	hector_reset(1, 0);
+	hector_reset(true, false);
 }
 
 MACHINE_START_MEMBER(hec2hrp_state,hec2hrx)
@@ -371,7 +371,9 @@ MACHINE_RESET_MEMBER(hec2hrp_state,hec2hrx)
 	// DISK II Memory
 	m_bank[3]->set_entry(DISCII_BANK_ROM);
 
-	hector_reset(1, 1);
+	printf("Reset HRX\n");
+
+	hector_reset(true, true);
 	hector_disc2_reset();
 }
 
@@ -382,7 +384,7 @@ MACHINE_RESET_MEMBER(hec2hrp_state,hec2mdhrx)
 	m_bank[1]->set_entry(HECTOR_BANK_PROG);
 	m_bank[2]->set_entry(HECTORMX_BANK_PAGE0);
 
-	hector_reset(1, 0);
+	hector_reset(true, false);
 }
 
 void hec2hrp_state::interact_common(machine_config &config)
@@ -419,7 +421,6 @@ void hec2hrp_state::hector1(machine_config &config)
 
 	interact_common(config);
 }
-
 
 // mini disk interface
 

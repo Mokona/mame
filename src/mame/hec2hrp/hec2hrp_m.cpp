@@ -183,11 +183,6 @@ void hec2hrp_state::switch_bank_w(offs_t offset, uint8_t data)
 	}
 }
 
-// void hec2hrp_state::keyboard_w(uint8_t data)
-// {
-// 	/* nothing to do (read function manages the value) */
-// }
-
 uint8_t hec2hrp_state::keyboard_r(offs_t offset)
 {
 	uint8_t data = 0xff;
@@ -200,28 +195,7 @@ uint8_t hec2hrp_state::keyboard_r(offs_t offset)
 		if (data & 0x01) /* Reset machine */
 		{
 			m_maincpu->pulse_input_line(INPUT_LINE_RESET, attotime::zero);
-			if (m_is_hr)
-			{
-				m_hector_flag_hr = true;
-				if (m_is_extended)
-				{
-					m_bank[1]->set_entry(HECTOR_BANK_PROG);
-					m_bank[2]->set_entry(HECTORMX_BANK_PAGE0);
-				}
-				//RESET DISC II unit
-				if (m_has_disc2)
-					hector_disc2_reset();
-
-				/* floppy md master reset */
-				if (m_has_minidisc)
-					m_minidisc_fdc->reset();
-			}
-			else
-				m_hector_flag_hr = false;
-
-			/*Common flag*/
-			m_hector_flag_80c = false;
-			m_flag_clk = false;
+			// TODO: reset the 8255 when it's implemented as a device
 		}
 
 		m_actions = 0;
