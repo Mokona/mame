@@ -105,7 +105,7 @@ void hec2hrp_state::interact_mem(address_map &map)
 	map(0x2000, 0x2003).w(FUNC(hec2hrp_state::sn_2000_w));  /* Sound*/
 	map(0x2800, 0x2803).w(FUNC(hec2hrp_state::sn_2800_w));  /* Sound*/
 	map(0x3000, 0x3000).rw(FUNC(hec2hrp_state::cassette_r), FUNC(hec2hrp_state::sn_3000_w));/* Write necessary*/
-	map(0x3800, 0x3807).rw(FUNC(hec2hrp_state::keyboard_r), FUNC(hec2hrp_state::keyboard_w));  /* Keyboard*/
+	map(0x3800, 0x3807).r(FUNC(hec2hrp_state::keyboard_r));  /* Keyboard*/
 	map(0x4000, 0x49ff).ram().share("videoram");
 	map(0x4A00, 0xffff).ram();
 }
@@ -124,7 +124,7 @@ void hec2hrp_state::hec2hrx_mem(address_map &map)
 	hec2hrp_mem(map);
 	map(0x0000, 0x3fff).bankr("bank2"); /* Main ROM page*/
 	map(0x3000, 0x3000).rw(FUNC(hec2hrp_state::cassette_r), FUNC(hec2hrp_state::sn_3000_w));/* Write necessary*/
-	map(0x3800, 0x3807).rw(FUNC(hec2hrp_state::keyboard_r), FUNC(hec2hrp_state::keyboard_w));  /* Keyboard*/
+	map(0x3800, 0x3807).r(FUNC(hec2hrp_state::keyboard_r));  /* Keyboard*/
 	map(0xc000, 0xffff).bankrw("bank1").share("hector_videoram");  /* => Bank Ram for video and data */
 }
 

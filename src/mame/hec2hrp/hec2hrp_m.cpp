@@ -183,10 +183,10 @@ void hec2hrp_state::switch_bank_w(offs_t offset, uint8_t data)
 	}
 }
 
-void hec2hrp_state::keyboard_w(uint8_t data)
-{
-	/* nothing to do (read function manages the value) */
-}
+// void hec2hrp_state::keyboard_w(uint8_t data)
+// {
+// 	/* nothing to do (read function manages the value) */
+// }
 
 uint8_t hec2hrp_state::keyboard_r(offs_t offset)
 {
