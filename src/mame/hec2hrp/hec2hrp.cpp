@@ -390,29 +390,14 @@ void hec2hrp_state::interact_common(machine_config &config)
 	MCFG_MACHINE_RESET_OVERRIDE(hec2hrp_state,interact)
 	MCFG_MACHINE_START_OVERRIDE(hec2hrp_state,hec2hrp)
 
-	/* video hardware */
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
-	screen.set_refresh_hz(60);
-	screen.set_vblank_time(ATTOSECONDS_IN_USEC(2500)); /* not accurate */
-	screen.set_size(256, 79);
-	screen.set_visarea(0, 112, 0, 77);
-	screen.set_screen_update(FUNC(hec2hrp_state::screen_update_interact));
-	screen.set_palette(m_palette);
-
-	PALETTE(config, m_palette, FUNC(hec2hrp_state::init_palette), 16);  /* 8 colours, but only 4 at a time*/
-
+	hector_lodef_screen(config);
 	hector_audio(config);
+	hector_cassette(config);
 
-	CASSETTE(config, m_cassette);
-	m_cassette->set_formats(hector_cassette_formats);
-	m_cassette->set_default_state(CASSETTE_PLAY | CASSETTE_MOTOR_DISABLED | CASSETTE_SPEAKER_ENABLED);
-	m_cassette->add_route(ALL_OUTPUTS, "mono", 0.05);
-	m_cassette->set_interface("interact_cass");
+	PRINTER(config, m_printer, 0);
+	RAM(config, RAM_TAG).set_default_size("16K").set_default_value(0x00);
 
 	SOFTWARE_LIST(config, "cass_list").set_original("interact");
-
-	/* printer */
-	PRINTER(config, m_printer, 0);
 }
 
 void hec2hrp_state::interact(machine_config &config)
@@ -454,6 +439,40 @@ static void hector_floppies(device_slot_interface &device)
 	device.option_add("525hd", FLOPPY_525_HD);
 }
 
+void hec2hrp_state::hector_lodef_screen(machine_config &config)
+{
+	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen.set_refresh_hz(60);
+	screen.set_vblank_time(ATTOSECONDS_IN_USEC(2500)); /* not accurate */
+	screen.set_size(256, 79);
+	screen.set_visarea(0, 112, 0, 77);
+	screen.set_screen_update(FUNC(hec2hrp_state::screen_update_interact));
+	screen.set_palette(m_palette);
+
+	PALETTE(config, m_palette, FUNC(hec2hrp_state::init_palette), 16);  /* 8 colours, but only 4 at a time*/
+}
+
+void hec2hrp_state::hector_hidef_screen(machine_config &config)
+{
+	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen.set_refresh_hz(50);
+	screen.set_vblank_time(ATTOSECONDS_IN_USEC(400)); /* 2500 not accurate */
+	screen.set_size(512, 230);
+	screen.set_visarea(0, 243, 0, 227);
+	screen.set_screen_update(FUNC(hec2hrp_state::screen_update_hec2hrp));
+	screen.set_palette(m_palette);
+
+	PALETTE(config, m_palette, FUNC(hec2hrp_state::init_palette), 16);  /* 8 colours, but only 4 at a time*/
+}
+
+void hec2hrp_state::hector_cassette(machine_config &config)
+{
+	CASSETTE(config, m_cassette);
+	m_cassette->set_formats(hector_cassette_formats);
+	m_cassette->set_default_state(CASSETTE_PLAY | CASSETTE_MOTOR_DISABLED | CASSETTE_SPEAKER_ENABLED);
+	m_cassette->add_route(ALL_OUTPUTS, "mono", 0.05);
+	m_cassette->set_interface("interact_cass");
+}
 
 void hec2hrp_state::hec2hr(machine_config &config)
 {
@@ -465,38 +484,33 @@ void hec2hrp_state::hec2hr(machine_config &config)
 	MCFG_MACHINE_RESET_OVERRIDE(hec2hrp_state,hec2hrp)
 	MCFG_MACHINE_START_OVERRIDE(hec2hrp_state,hec2hrp)
 
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
-	screen.set_refresh_hz(50);
-	screen.set_vblank_time(ATTOSECONDS_IN_USEC(400)); /* 2500 not accurate */
-	screen.set_size(512, 230);
-	screen.set_visarea(0, 243, 0, 227);
-	screen.set_screen_update(FUNC(hec2hrp_state::screen_update_hec2hrp));
-	screen.set_palette(m_palette);
-
-	PALETTE(config, m_palette, FUNC(hec2hrp_state::init_palette), 16);  /* 8 colours, but only 4 at a time*/
-
+	hector_hidef_screen(config);
 	hector_audio(config);
-
-	CASSETTE(config, m_cassette);
-	m_cassette->set_formats(hector_cassette_formats);
-	m_cassette->set_default_state(CASSETTE_PLAY | CASSETTE_MOTOR_DISABLED | CASSETTE_SPEAKER_ENABLED);
-	m_cassette->add_route(ALL_OUTPUTS, "mono", 0.05);
-	m_cassette->set_interface("interact_cass");
+	hector_cassette(config);
 
 	PRINTER(config, m_printer, 0);
-
-	/* internal ram */
 	RAM(config, RAM_TAG).set_default_size("80K").set_default_value(0x00);
-
 	SOFTWARE_LIST(config, "cass_list").set_original("interact");
 }
 
 void hec2hrp_state::hec2hrx(machine_config &config)
 {
-	hec2hr(config);
+	Z80(config, m_maincpu, 5_MHz_XTAL);
 	m_maincpu->set_addrmap(AS_PROGRAM, &hec2hrp_state::hec2hrx_mem);
 	m_maincpu->set_addrmap(AS_IO, &hec2hrp_state::hec2hrx_io);
+	m_maincpu->set_periodic_int(FUNC(hec2hrp_state::irq0_line_hold), attotime::from_hz(50)); /*  put on the Z80 irq in Hz*/
 
+	MCFG_MACHINE_RESET_OVERRIDE(hec2hrp_state,hec2hrx)
+	MCFG_MACHINE_START_OVERRIDE(hec2hrp_state,hec2hrx)
+
+	hector_hidef_screen(config);
+	hector_audio(config);
+	hector_cassette(config);
+
+	PRINTER(config, m_printer, 0);
+	RAM(config, RAM_TAG).set_default_size("80K").set_default_value(0x00);
+
+	// Disc 2
 	Z80(config, m_disc2cpu, 4_MHz_XTAL);
 	m_disc2cpu->set_addrmap(AS_PROGRAM, &hec2hrp_state::hecdisc2_mem);
 	m_disc2cpu->set_addrmap(AS_IO, &hec2hrp_state::hecdisc2_io);

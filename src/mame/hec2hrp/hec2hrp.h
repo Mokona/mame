@@ -75,7 +75,6 @@ public:
 	void hec2mx40(machine_config &config);
 	void hec2mdhrx(machine_config &config);
 	void hec2hr(machine_config &config);
-	void hector_audio(machine_config &config);
 
 	void init_mx40();
 	void init_mdhrx();
@@ -180,6 +179,11 @@ private:
 	uint32_t screen_update_interact(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 	void interact_mem(address_map &map);
 
+	void hector_audio(machine_config &config);
+	void hector_lodef_screen(machine_config &config);
+	void hector_hidef_screen(machine_config &config);
+	void hector_cassette(machine_config &config);
+
 	void hec2hrp_io(address_map &map);
 	void hec2hrp_mem(address_map &map);
 	void hec2hrx_io(address_map &map);
@@ -197,7 +201,7 @@ private:
 	optional_shared_ptr<uint8_t> m_vram;
 	optional_memory_bank_array<4> m_bank;
 	required_region_ptr<u8> m_rom;
-	optional_device<ram_device> m_ram;
+	required_device<ram_device> m_ram;
 	memory_share_creator<uint8_t> m_hector_vram;
 	optional_device<cpu_device> m_disc2cpu;
 	required_device<discrete_device> m_discrete;
