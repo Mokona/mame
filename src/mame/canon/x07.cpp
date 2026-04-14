@@ -833,7 +833,7 @@ void x07_state::t6834_set_audio()
 		m_beep->set_clock(0);
 		m_audio_tick->reset();
 	}
-	m_beep->set_state(1);
+	m_beep->set_state((m_regs_w[4] & 0x02) ? 1 : 0);  // only sound if BZON set
 	m_regs_r[2] |= 0x04;  // signaling generator is running
 }
 
@@ -1037,7 +1037,7 @@ void x07_state::kb_irq()
 
 		// Produce a brief click through the buzzer, unless a tone is already playing
 		// The click is a coprocessor feature.
-		if (m_click_on && (m_regs_w[4] & 0x0e) != 0x0e)
+		if (m_click_on && (m_regs_w[4] & 0x4c) != 0x4c)
 		{
 			m_beep->set_clock(1200);
 			m_beep->set_state(1);
@@ -1202,7 +1202,7 @@ void x07_state::x07_io_w(offs_t offset, uint8_t data)
 	case 0xf2:
 	case 0xf3:
 		m_regs_w[offset & 7] = data;
-		if ((m_regs_w[4] & 0x0e) == 0x0e)
+		if ((m_regs_w[4] & 0x4c) == 0x4c)
 			t6834_set_audio();
 		break;
 
@@ -1222,7 +1222,7 @@ void x07_state::x07_io_w(offs_t offset, uint8_t data)
 			m_cass_tick->reset();
 		}
 
-		if((data & 0x0e) == 0x0e)
+		if((data & 0x4c) == 0x4c)
 			t6834_set_audio();
 		else
 			t6834_reset_audio();
@@ -1393,7 +1393,7 @@ TIMER_CALLBACK_MEMBER(x07_state::audio_tick)
 TIMER_CALLBACK_MEMBER(x07_state::click_stop)
 {
 	// Only stop if the F4 buzzer hasn't been activated in the meantime
-	if ((m_regs_w[4] & 0x0e) != 0x0e)
+	if ((m_regs_w[4] & 0x4c) != 0x4c)
 		m_beep->set_state(0);
 }
 
