@@ -534,7 +534,11 @@ void x07_state::t6834_cmd (uint8_t cmd)
 		break;
 
 	case 0x38:  //click off
+		m_click_on = 0;
+		break;
+
 	case 0x39:  //click on
+		m_click_on = 1;
 		break;
 
 	case 0x3a:  //Locate Close
@@ -1030,6 +1034,15 @@ void x07_state::kb_irq()
 		m_regs_r[2] |= 0x01;
 		m_maincpu->set_input_line(NSC800_RSTA, ASSERT_LINE);
 		m_rsta_clear->adjust(attotime::from_msec(50));
+
+		// Produce a brief click through the buzzer, unless a tone is already playing
+		// The click is a coprocessor feature.
+		if (m_click_on && (m_regs_w[4] & 0x0e) != 0x0e)
+		{
+			m_beep->set_clock(1200);
+			m_beep->set_state(1);
+			m_click_stop->adjust(attotime::from_msec(10));
+		}
 	}
 }
 
@@ -1377,9 +1390,11 @@ TIMER_CALLBACK_MEMBER(x07_state::audio_tick)
 	m_rstb_clear->adjust(attotime::from_usec(50));
 }
 
-TIMER_CALLBACK_MEMBER(x07_state::beep_stop)
+TIMER_CALLBACK_MEMBER(x07_state::click_stop)
 {
-	m_beep->set_state(0);
+	// Only stop if the F4 buzzer hasn't been activated in the meantime
+	if ((m_regs_w[4] & 0x0e) != 0x0e)
+		m_beep->set_state(0);
 }
 
 static const gfx_layout x07_charlayout =
@@ -1403,7 +1418,7 @@ void x07_state::machine_start()
 	m_rsta_clear = timer_alloc(FUNC(x07_state::rsta_clear), this);
 	m_rstb_clear = timer_alloc(FUNC(x07_state::rstb_clear), this);
 	m_audio_tick = timer_alloc(FUNC(x07_state::audio_tick), this);
-	//m_beep_stop = timer_alloc(FUNC(x07_state::beep_stop), this);
+	m_click_stop = timer_alloc(FUNC(x07_state::click_stop), this);
 	m_cass_poll = timer_alloc(FUNC(x07_state::cassette_poll), this);
 	m_cass_tick = timer_alloc(FUNC(x07_state::cassette_tick), this);
 
@@ -1422,6 +1437,7 @@ void x07_state::machine_start()
 	save_item(NAME(m_scroll_max));
 	save_item(NAME(m_blink));
 	save_item(NAME(m_kb_on));
+	save_item(NAME(m_click_on));
 	save_item(NAME(m_repeat_key));
 	save_item(NAME(m_kb_size));
 	save_item(NAME(m_prn_sendbit));
@@ -1488,6 +1504,7 @@ void x07_state::machine_reset()
 	m_scroll_max = 3;
 	m_blink = 0;
 	m_kb_on = 0;
+	m_click_on = 1;
 	m_repeat_key = 0;
 	m_kb_size = 0;
 	m_repeat_key = 0;

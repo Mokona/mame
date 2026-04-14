@@ -249,7 +249,7 @@ private:
 	emu_timer *m_rsta_clear = nullptr;
 	emu_timer *m_rstb_clear = nullptr;
 	emu_timer *m_audio_tick = nullptr;
-	// emu_timer *m_beep_stop = nullptr;
+	emu_timer *m_click_stop = nullptr;
 
 	/* LCD */
 	uint8_t m_lcd_on = 0;
@@ -268,6 +268,7 @@ private:
 
 	/* keyboard */
 	uint8_t m_kb_on = 0;
+	uint8_t m_click_on = 1;           //key click enabled by default
 	uint8_t m_repeat_key = 0;         //not supported
 	uint8_t m_kb_size = 0;
 
@@ -291,7 +292,7 @@ private:
 	TIMER_CALLBACK_MEMBER(rsta_clear);
 	TIMER_CALLBACK_MEMBER(rstb_clear);
 	TIMER_CALLBACK_MEMBER(audio_tick);
-	TIMER_CALLBACK_MEMBER(beep_stop);
+	TIMER_CALLBACK_MEMBER(click_stop);
 	TIMER_DEVICE_CALLBACK_MEMBER(blink_timer);
 
 	void x07_io(address_map &map) ATTR_COLD;
