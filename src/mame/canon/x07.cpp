@@ -42,6 +42,19 @@
     T6834 IMPLEMENTATION
 ***************************************************************************/
 
+// HD61L202F write port F4 control bits
+static constexpr uint8_t F4_W_REM   = 0x01;
+static constexpr uint8_t F4_W_BZON  = 0x02; // buzzer sound enable
+static constexpr uint8_t F4_W_MD0   = 0x04; // mode select bit 0
+static constexpr uint8_t F4_W_MD1   = 0x08; // mode select bit 1
+static constexpr uint8_t F4_W_LEO   = 0x10; // 38.4 kHz opto-coupler signal
+static constexpr uint8_t F4_W_CNTR  = 0x20; // parallel port control bit
+static constexpr uint8_t F4_W_BRGST = 0x40; // start baud-rate generator (BRG)
+static constexpr uint8_t F4_W_SETBC = 0x80; // load BRG counter from F2/F3
+
+// BRG is active when running in buzzer mode (MD1=MD0=1) with BRGST set.
+static constexpr uint8_t F4_BRG_ACTIVE = F4_W_BRGST | F4_W_MD1 | F4_W_MD0;
+
 void x07_state::t6834_cmd (uint8_t cmd)
 {
 	switch (cmd)
@@ -833,7 +846,7 @@ void x07_state::t6834_set_audio()
 		m_beep->set_clock(0);
 		m_audio_tick->reset();
 	}
-	m_beep->set_state((m_regs_w[4] & 0x02) ? 1 : 0);  // only sound if BZON set
+	m_beep->set_state((m_regs_w[4] & F4_W_BZON) ? 1 : 0);  // only sound if BZON set
 	m_regs_r[2] |= 0x04;  // signaling generator is running
 }
 
@@ -1037,7 +1050,7 @@ void x07_state::kb_irq()
 
 		// Produce a brief click through the buzzer, unless a tone is already playing
 		// The click is a coprocessor feature.
-		if (m_click_on && (m_regs_w[4] & 0x4c) != 0x4c)
+		if (m_click_on && (m_regs_w[4] & F4_BRG_ACTIVE) != F4_BRG_ACTIVE)
 		{
 			m_beep->set_clock(1200);
 			m_beep->set_state(1);
@@ -1202,7 +1215,7 @@ void x07_state::x07_io_w(offs_t offset, uint8_t data)
 	case 0xf2:
 	case 0xf3:
 		m_regs_w[offset & 7] = data;
-		if ((m_regs_w[4] & 0x4c) == 0x4c)
+		if ((m_regs_w[4] & F4_BRG_ACTIVE) == F4_BRG_ACTIVE)
 			t6834_set_audio();
 		break;
 
@@ -1222,7 +1235,7 @@ void x07_state::x07_io_w(offs_t offset, uint8_t data)
 			m_cass_tick->reset();
 		}
 
-		if((data & 0x4c) == 0x4c)
+		if((data & F4_BRG_ACTIVE) == F4_BRG_ACTIVE)
 			t6834_set_audio();
 		else
 			t6834_reset_audio();
@@ -1393,7 +1406,7 @@ TIMER_CALLBACK_MEMBER(x07_state::audio_tick)
 TIMER_CALLBACK_MEMBER(x07_state::click_stop)
 {
 	// Only stop if the F4 buzzer hasn't been activated in the meantime
-	if ((m_regs_w[4] & 0x4c) != 0x4c)
+	if ((m_regs_w[4] & F4_BRG_ACTIVE) != F4_BRG_ACTIVE)
 		m_beep->set_state(0);
 }
 
