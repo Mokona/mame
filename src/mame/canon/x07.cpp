@@ -813,6 +813,34 @@ void x07_state::receive_bit(int bit)
 	}
 }
 
+void x07_state::t6834_set_audio()
+{
+	const uint16_t div = (m_regs_w[2] | m_regs_w[3] << 8) & 0x0fff;
+	if (div > 0)
+	{
+		const uint32_t freq = 192000 / div;
+		m_beep->set_clock(freq);
+
+		const uint32_t adjusted_freq = freq * 2; // empirical to match hardware result
+		m_audio_tick->adjust(attotime::from_hz(adjusted_freq), 0, attotime::from_hz(adjusted_freq));
+	}
+	else
+	{
+		m_beep->set_clock(0);
+		m_audio_tick->reset();
+	}
+	m_beep->set_state(1);
+	m_regs_r[2] |= 0x04;  // signaling generator is running
+}
+
+void x07_state::t6834_reset_audio()
+{
+	m_beep->set_state(0);
+	m_audio_tick->reset();
+	m_regs_r[2] &= ~0x04;  // generator not running
+}
+
+
 
 /****************************************************
     this function emulate the color printer X-710
@@ -1153,11 +1181,16 @@ void x07_state::x07_io_w(offs_t offset, uint8_t data)
 
 	case 0xf0:
 	case 0xf1:
-	case 0xf2:
-	case 0xf3:
 	case 0xf6:
 	case 0xf7:
 		m_regs_w[offset & 7] = data;
+		break;
+
+	case 0xf2:
+	case 0xf3:
+		m_regs_w[offset & 7] = data;
+		if ((m_regs_w[4] & 0x0e) == 0x0e)
+			t6834_set_audio();
 		break;
 
 	case 0xf4:
@@ -1177,15 +1210,9 @@ void x07_state::x07_io_w(offs_t offset, uint8_t data)
 		}
 
 		if((data & 0x0e) == 0x0e)
-		{
-			uint16_t div = (m_regs_w[2] | m_regs_w[3] << 8) & 0x0fff;
-			m_beep->set_clock((div == 0) ? 0 : 192000 / div);
-			m_beep->set_state(1);
-
-			m_beep_stop->adjust(attotime::from_msec(m_ram->pointer()[0x450] * 0x20));
-		}
+			t6834_set_audio();
 		else
-			m_beep->set_state(0);
+			t6834_reset_audio();
 		break;
 
 	case 0xf5:
@@ -1344,6 +1371,12 @@ TIMER_CALLBACK_MEMBER(x07_state::rstb_clear)
 	m_maincpu->set_input_line(NSC800_RSTB, CLEAR_LINE);
 }
 
+TIMER_CALLBACK_MEMBER(x07_state::audio_tick)
+{
+	m_maincpu->set_input_line(NSC800_RSTB, ASSERT_LINE);
+	m_rstb_clear->adjust(attotime::from_usec(50));
+}
+
 TIMER_CALLBACK_MEMBER(x07_state::beep_stop)
 {
 	m_beep->set_state(0);
@@ -1369,7 +1402,8 @@ void x07_state::machine_start()
 	uint32_t ram_size = m_ram->size();
 	m_rsta_clear = timer_alloc(FUNC(x07_state::rsta_clear), this);
 	m_rstb_clear = timer_alloc(FUNC(x07_state::rstb_clear), this);
-	m_beep_stop = timer_alloc(FUNC(x07_state::beep_stop), this);
+	m_audio_tick = timer_alloc(FUNC(x07_state::audio_tick), this);
+	//m_beep_stop = timer_alloc(FUNC(x07_state::beep_stop), this);
 	m_cass_poll = timer_alloc(FUNC(x07_state::cassette_poll), this);
 	m_cass_tick = timer_alloc(FUNC(x07_state::cassette_tick), this);
 

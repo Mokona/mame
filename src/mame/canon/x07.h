@@ -214,6 +214,9 @@ private:
 	void cassette_save();
 	void receive_bit(int bit);
 
+	void t6834_set_audio();
+	void t6834_reset_audio();
+
 	inline uint8_t get_char(uint16_t pos);
 	inline uint8_t kb_get_index(uint8_t char_code);
 	inline void draw_char(uint8_t x, uint8_t y, uint8_t char_pos);
@@ -245,7 +248,8 @@ private:
 	uint8_t m_font_code = 0;
 	emu_timer *m_rsta_clear = nullptr;
 	emu_timer *m_rstb_clear = nullptr;
-	emu_timer *m_beep_stop = nullptr;
+	emu_timer *m_audio_tick = nullptr;
+	// emu_timer *m_beep_stop = nullptr;
 
 	/* LCD */
 	uint8_t m_lcd_on = 0;
@@ -286,6 +290,7 @@ private:
 	TIMER_CALLBACK_MEMBER(cassette_poll);
 	TIMER_CALLBACK_MEMBER(rsta_clear);
 	TIMER_CALLBACK_MEMBER(rstb_clear);
+	TIMER_CALLBACK_MEMBER(audio_tick);
 	TIMER_CALLBACK_MEMBER(beep_stop);
 	TIMER_DEVICE_CALLBACK_MEMBER(blink_timer);
 
