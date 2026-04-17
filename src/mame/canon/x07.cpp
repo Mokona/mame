@@ -42,6 +42,9 @@
     T6834 IMPLEMENTATION
 ***************************************************************************/
 
+static constexpr XTAL X07_CPU_CLOCK = 15.36_MHz_XTAL / 4;
+static constexpr XTAL BRG_INPUT_HZ = X07_CPU_CLOCK / 20; // = 192000 Hz
+
 // HD61L202F write port F4 control bits
 static constexpr uint8_t F4_W_REM   = 0x01;
 static constexpr uint8_t F4_W_BZON  = 0x02; // buzzer sound enable
@@ -835,7 +838,7 @@ void x07_state::t6834_set_audio()
 	const uint16_t div = (m_regs_w[2] | m_regs_w[3] << 8) & 0x0fff;
 	if (div > 0)
 	{
-		const uint32_t freq = 192000 / div;
+		const uint32_t freq = BRG_INPUT_HZ.value() / div;
 		m_beep->set_clock(freq);
 
 		const uint32_t adjusted_freq = freq * 2; // empirical to match hardware result
@@ -1533,7 +1536,7 @@ void x07_state::machine_reset()
 void x07_state::x07(machine_config &config)
 {
 	/* basic machine hardware */
-	NSC800(config, m_maincpu, 15.36_MHz_XTAL / 4);
+	NSC800(config, m_maincpu, X07_CPU_CLOCK);
 	m_maincpu->set_addrmap(AS_PROGRAM, &x07_state::x07_mem);
 	m_maincpu->set_addrmap(AS_IO, &x07_state::x07_io);
 
